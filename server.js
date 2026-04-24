@@ -5,7 +5,7 @@ const nodemailer = require('nodemailer');
 
 const PORT = process.env.PORT || 3000;
 const HOST = process.env.HOST || '0.0.0.0';
-const RECIPIENT_EMAIL = 'sharmaji6430@gmail.com';
+const RECIPIENT_EMAIL = 'rakeshsharma1903@gmail.com';
 const indexPath = path.join(__dirname, 'index.html');
 
 const requiredEnvVars = ['SMTP_HOST', 'SMTP_PORT', 'SMTP_USER', 'SMTP_PASS', 'MAIL_FROM'];
@@ -101,24 +101,24 @@ async function handleFormSubmission(req, res, formType) {
 
     const normalized = formType === 'quote'
       ? {
-          form_type: 'Hero Quote Form',
-          full_name: parsed.name || '',
-          phone_number: parsed.phone || '',
-          moving_from: parsed.from || '',
-          moving_to: parsed.to || '',
-          submitted_at: new Date().toISOString()
-        }
+        form_type: 'Hero Quote Form',
+        full_name: parsed.name || '',
+        phone_number: parsed.phone || '',
+        moving_from: parsed.from || '',
+        moving_to: parsed.to || '',
+        submitted_at: new Date().toISOString()
+      }
       : {
-          form_type: 'Detailed Contact Form',
-          full_name: parsed.full_name || '',
-          phone_number: parsed.phone_number || '',
-          moving_from: parsed.moving_from || '',
-          moving_to: parsed.moving_to || '',
-          move_type: parsed.move_type || '',
-          move_date: parsed.move_date || '',
-          details: parsed.details || '',
-          submitted_at: new Date().toISOString()
-        };
+        form_type: 'Detailed Contact Form',
+        full_name: parsed.full_name || '',
+        phone_number: parsed.phone_number || '',
+        moving_from: parsed.moving_from || '',
+        moving_to: parsed.moving_to || '',
+        move_type: parsed.move_type || '',
+        move_date: parsed.move_date || '',
+        details: parsed.details || '',
+        submitted_at: new Date().toISOString()
+      };
 
     await transporter.sendMail({
       from: process.env.MAIL_FROM,
@@ -170,6 +170,35 @@ const server = http.createServer(async (req, res) => {
       mailConfigured: hasMailConfig()
     });
     return;
+  }
+
+  if (req.method === 'GET') {
+    const ext = path.extname(req.url).toLowerCase();
+    const mimeTypes = {
+      '.png': 'image/png',
+      '.jpg': 'image/jpeg',
+      '.jpeg': 'image/jpeg',
+      '.svg': 'image/svg+xml',
+      '.ico': 'image/x-icon',
+      '.txt': 'text/plain',
+      '.xml': 'application/xml'
+    };
+
+    if (mimeTypes[ext]) {
+      // Very basic static file serving for known extensions
+      const safePath = path.normalize(req.url).replace(/^(\.\.[\/\\])+/, '');
+      const filePath = path.join(__dirname, safePath);
+      
+      try {
+        if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+          res.writeHead(200, { 'Content-Type': mimeTypes[ext] });
+          fs.createReadStream(filePath).pipe(res);
+          return;
+        }
+      } catch (err) {
+        // ignore error, fall through to 404
+      }
+    }
   }
 
   sendJson(res, 404, { ok: false, error: 'Not found.' });
